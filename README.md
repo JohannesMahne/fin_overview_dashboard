@@ -8,9 +8,9 @@ The instructions below describe how to set up a dashboard that provides a financ
 
 ## Dependencies
 
-1. ESS Billing integration
-2. ES Usage integration
-3. Chargeback integration
+1. [Elasticsearch Service Billing integration](https://www.elastic.co/docs/reference/integrations/ess_billing)
+2. [Elasticsearch integration](https://www.elastic.co/docs/reference/integrations/elasticsearch) usage transform
+3. [Elasticsearch Chargeback integration](https://github.com/elastic/elasticsearch-chargeback/tree/main/integration)
 4. Deployment names in ECH should be in the format: `<company_name>_<country_code>_<business_unit>_<environment>_<function>`
 
 ## Steps to implement the dashboard
