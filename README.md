@@ -1,27 +1,26 @@
 # Financial summary dashboard
 
 The instructions below describe how to set up a dashboard that provides a financial summary for your business units. The dashboard is designed to help monitor costs and usage patterns effectively. It has four sections:
-1. ECH Billing Summary
-2. ECH Credit burndown (not filtered by deployment group)
-3. Deployment Usage Summary
-4. Chargeback Summary
+1. ECH billing summary
+2. ECH credit burndown (not filtered by deployment group)
+3. Deployment usage summary
+4. Chargeback summary
+
+## Dependencies
+
+1. ESS Billing integration
+2. ES Usage integration
+3. Chargeback integration
 
 ## Steps to implement the dashboard
 
-
 1. Set up an enrichment policy to map deployment IDs to deployment names for usage data.
-
 2. Build a custom ingest pipeline to extract the business unit from the deployment name and set it as `deployment_group`.
-
 3. Build a custom ingest pipeline for usage data, using the enrichment policy to add deployment names and extract the business unit as `deployment_group`.
-
 4. Update historical billing and usage data by increasing the lookback value or running an update-by-query operation to apply the new pipelines.
-
 5. Upgrade the Chargeback integration to ensure compatibility with the new pipelines.
-
 6. Set up a watcher to execute the enrichment policy daily and keep the enrich index up to date.
-
-7. Import the dashboard JSON and use the `deployment_group` field to filter by business
+7. Import the [dashboard NDJSON](https://github.com/JohannesMahne/fin_overview_dashboard/blob/main/fin-overview-dashboard.ndjson) to use the `deployment_group` field to filter by business
 
 ## Details
 
@@ -208,3 +207,7 @@ PUT _watcher/watch/execute_fin_dashboard_deployment_lookup_enrich_policy
     }
 }
 ```
+
+### Upload dashboard
+
+Upload the [dashboard NDJSON](https://github.com/JohannesMahne/fin_overview_dashboard/blob/main/fin-overview-dashboard.ndjson) file.
