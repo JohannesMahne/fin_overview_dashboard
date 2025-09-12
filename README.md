@@ -47,7 +47,7 @@ POST /_enrich/policy/fin_dashboard_deployment_lookup/_execute
 
 The ingest pipeline will extract the `business_unit` from the `deployment_name` and set it as `deployment_group`. This will be used in the dashboard to filter by business unit.
 
-Using the @custom suffix to avoid overwriting the default pipeline provided by Elastic.
+Using the `@custom` suffix to avoid overwriting the default pipeline provided by Elastic.
 
 ```
 PUT _ingest/pipeline/metrics-ess_billing.billing@custom
@@ -87,7 +87,7 @@ To update historical data, go to the integration and change the lookback value t
 
 The usage data does not have the `deployment_name` field, so we will use the enrich processor to get the `deployment_name` from the `elasticsearch.cluster.name` field. Then we will extract the `business_unit` from the `deployment_name` and set it as `deployment_group`.
 
-Using the @custom suffix to avoid overwriting the default pipeline provided by Elastic.
+Using the `@custom` suffix to avoid overwriting the default pipeline provided by Elastic.
 
 ```
 # Create the ingest pipeline
