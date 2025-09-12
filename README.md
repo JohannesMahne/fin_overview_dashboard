@@ -106,22 +106,15 @@ PUT _ingest/pipeline/metrics-elasticsearch.ingest_pipeline@custom
     },
     {
       "set": {
-        "if": "ctx?.elasticsearch?.cluster?.name != null",
+        "if": "ctx?.enriched?.deployment_name != null",
         "field": "deployment_name",
-        "value": "{{enriched.ess.billing.deployment_name}}"
+        "value": "{{enriched.deployment_name}}"
       }
     },
     {
       "remove": {
         "field": "enriched",
         "ignore_missing": true
-      }
-    },
-    {
-      "set": {
-        "if": "ctx?.ess?.billing?.deployment_name != null",
-        "field": "deployment_name",
-        "value": "{{ess.billing.deployment_name}}"
       }
     },
     {
