@@ -77,6 +77,13 @@ PUT _ingest/pipeline/metrics-ess_billing.billing@custom
         "if": "ctx?.business_unit != null",
         "value": "{{business_unit}}"
       }
+    },
+    {
+      "set": {
+        "field": "deployment_group",
+        "if": "ctx?.deployment_group == null",
+        "value": "inv_group"
+      }
     }
   ]
 }
@@ -132,6 +139,13 @@ PUT _ingest/pipeline/metrics-elasticsearch.ingest_pipeline@custom
         "if": "ctx?.business_unit != null",
         "field": "deployment_group",
         "value": "{{business_unit}}"
+      }
+    },
+    {
+      "set": {
+        "field": "deployment_group",
+        "if": "ctx?.deployment_group == null",
+        "value": "inv_group"
       }
     }
   ]
