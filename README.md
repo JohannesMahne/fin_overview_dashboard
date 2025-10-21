@@ -156,7 +156,7 @@ To update historical data, run the following query to reprocess all documents in
 
 ```
 # Update historical data with the new ingest pipeline
-POST monitoring-indices/_update_by_query?pipeline=metrics-elasticsearch.ingest_pipeline@custom
+POST monitoring-indices/_update_by_query?pipeline=metrics-elasticsearch.ingest_pipeline@custom&wait_for_completion=false
 {
   "query": {
     "match_all": {}
