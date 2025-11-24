@@ -8,10 +8,10 @@ The instructions below describe how to set up a dashboard that provides a financ
 
 ## Dependencies
 
-1. [Elasticsearch Service Billing integration](https://www.elastic.co/docs/reference/integrations/ess_billing)
+1. [Elasticsearch Service Billing integration](https://www.elastic.co/docs/reference/integrations/ess_billing) with `ess.billing.deployment_tags` field support
 2. [Elasticsearch integration](https://www.elastic.co/docs/reference/integrations/elasticsearch) usage transform
 3. [Elasticsearch Chargeback integration](https://github.com/elastic/elasticsearch-chargeback/tree/main/integration)
-4. Deployment names in ECH should be in the format: `<company_name>_<country_code>_<business_unit>_<environment>_<function>`
+4. Deployments should have a tag with key `chargeback_group` to specify the deployment group
 
 ## Steps to implement the dashboard
 
@@ -27,7 +27,7 @@ The instructions below describe how to set up a dashboard that provides a financ
 
 ### Create enrichment policy
 
-This policy will enrich be used to enrich the `elasticsearch.cluster.name` (which is just the deployment ID / cluster ID) field with the `deployment_name`. It will be used on the usage data that does not have the deployment name.
+This policy will enrich the `elasticsearch.cluster.name` (which is just the deployment ID / cluster ID) field with the `deployment_group`. It will be used on the usage data to apply the same deployment group as the billing data.
 
 ```
 # Create the enrich index from the billing_cluster_cost_lookup index
@@ -36,7 +36,7 @@ PUT /_enrich/policy/fin_dashboard_deployment_lookup
   "match": {
     "indices": "billing_cluster_cost_lookup",
     "match_field": "deployment_id",
-    "enrich_fields": ["deployment_name"]
+    "enrich_fields": ["deployment_group"]
   }
 }
 
@@ -55,15 +55,8 @@ Using the `@custom` suffix to avoid overwriting the default pipeline provided by
 ```
 PUT _ingest/pipeline/metrics-ess_billing.billing@custom
 {
-  "description": "Unify deployment group as business_unit for billing and monitoring",
+  "description": "Set deployment group from chargeback_group tag",
   "processors": [
-    {
-      "set": {
-        "field": "deployment_name",
-        "if": "ctx?.ess?.billing?.deployment_name != null",
-        "value": "{{ess.billing.deployment_name}}"
-      }
-    },
     {
       "script": {
         "description": "Extract chargeback_group from deployment_tags if available",
@@ -77,22 +70,6 @@ PUT _ingest/pipeline/metrics-ess_billing.billing@custom
             }
           }
         """
-      }
-    },
-    {
-      "grok": {
-        "field": "deployment_name",
-        "patterns": [
-          "(?<company_name>[^_]+)_(?<country_code>[^_]+)_(?<business_unit>[^_]+)_(?<env>[^_]+)(?:_(?<solution>.*))?"
-        ],
-        "ignore_failure": true
-      }
-    },
-    {
-      "set": {
-        "field": "deployment_group",
-        "if": "ctx?.business_unit != null && ctx?.deployment_group == null",
-        "value": "{{business_unit}}"
       }
     },
     {
@@ -110,7 +87,7 @@ To update historical data, go to the integration and change the lookback value t
 
 ### Create ingest pipeline for usage data
 
-The usage data does not have the `deployment_name` field, so we will use the enrich processor to get the `deployment_name` from the `elasticsearch.cluster.name` field. Then we will extract the `business_unit` from the `deployment_name` and set it as `deployment_group`.
+The usage data does not have the `deployment_group` field, so we will use the enrich processor to get the `deployment_group` from the `elasticsearch.cluster.name` field using the enrichment policy.
 
 Using the `@custom` suffix to avoid overwriting the default pipeline provided by Elastic.
 
@@ -118,7 +95,7 @@ Using the `@custom` suffix to avoid overwriting the default pipeline provided by
 # Create the ingest pipeline
 PUT _ingest/pipeline/metrics-elasticsearch.ingest_pipeline@custom
 {
-  "description": "Unify deployment group as business_unit for billing and monitoring",
+  "description": "Enrich usage data with deployment group from billing",
   "processors": [
     {
       "enrich": {
@@ -131,9 +108,9 @@ PUT _ingest/pipeline/metrics-elasticsearch.ingest_pipeline@custom
     },
     {
       "set": {
-        "if": "ctx?.enriched?.deployment_name != null",
-        "field": "deployment_name",
-        "value": "{{enriched.deployment_name}}"
+        "if": "ctx?.enriched?.deployment_group != null",
+        "field": "deployment_group",
+        "value": "{{enriched.deployment_group}}"
       }
     },
     {
@@ -143,26 +120,10 @@ PUT _ingest/pipeline/metrics-elasticsearch.ingest_pipeline@custom
       }
     },
     {
-      "grok": {
-        "field": "deployment_name",
-        "patterns": [
-          "(?<company_name>[^_]+)_(?<country_code>[^_]+)_(?<business_unit>[^_]+)_(?<env>[^_]+)(?:_(?<solution>.*))?"
-        ],
-        "ignore_failure": true
-      }
-    },
-    {
-      "set": {
-        "if": "ctx?.business_unit != null",
-        "field": "deployment_group",
-        "value": "{{business_unit}}"
-      }
-    },
-    {
       "set": {
         "field": "deployment_group",
         "if": "ctx?.deployment_group == null",
-        "value": "inv_group"
+        "value": "unspecified"
       }
     }
   ]
