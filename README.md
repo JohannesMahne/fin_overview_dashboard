@@ -48,6 +48,8 @@ POST /_enrich/policy/fin_dashboard_deployment_lookup/_execute
 
 The ingest pipeline will extract the `business_unit` from the `deployment_name` and set it as `deployment_group`. This will be used in the dashboard to filter by business unit.
 
+If the `ess.billing.deployment_tags` field contains a tag with key `chargeback_group`, its value will be used as `deployment_group`. Otherwise, the pipeline falls back to extracting the business unit from the deployment name.
+
 Using the `@custom` suffix to avoid overwriting the default pipeline provided by Elastic.
 
 ```
@@ -63,6 +65,21 @@ PUT _ingest/pipeline/metrics-ess_billing.billing@custom
       }
     },
     {
+      "script": {
+        "description": "Extract chargeback_group from deployment_tags if available",
+        "if": "ctx?.ess?.billing?.deployment_tags != null && ctx.ess.billing.deployment_tags instanceof List",
+        "lang": "painless",
+        "source": """
+          for (def tag : ctx.ess.billing.deployment_tags) {
+            if (tag.key == 'chargeback_group') {
+              ctx.deployment_group = tag.value;
+              break;
+            }
+          }
+        """
+      }
+    },
+    {
       "grok": {
         "field": "deployment_name",
         "patterns": [
@@ -74,7 +91,7 @@ PUT _ingest/pipeline/metrics-ess_billing.billing@custom
     {
       "set": {
         "field": "deployment_group",
-        "if": "ctx?.business_unit != null",
+        "if": "ctx?.business_unit != null && ctx?.deployment_group == null",
         "value": "{{business_unit}}"
       }
     },
@@ -82,7 +99,7 @@ PUT _ingest/pipeline/metrics-ess_billing.billing@custom
       "set": {
         "field": "deployment_group",
         "if": "ctx?.deployment_group == null",
-        "value": "inv_group"
+        "value": "unspecified"
       }
     }
   ]
