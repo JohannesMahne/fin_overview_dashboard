@@ -27,6 +27,28 @@ The instructions below describe how to set up a dashboard that provides a financ
 3. Import the [v3 dashboard NDJSON](https://github.com/JohannesMahne/fin_overview_dashboard/blob/main/fin-overview-dashboard-v3.ndjson)
 4. The dashboard will automatically use the `chargeback_group` tag values to filter billing and chargeback data
 
+## Migrating from v1/v2 to v3
+
+If you're upgrading from the legacy dashboard versions, you can clean up the custom pipelines and enrichment policy that are no longer needed:
+
+```
+# Remove custom ingest pipelines
+DELETE _ingest/pipeline/metrics-ess_billing.billing@custom
+DELETE _ingest/pipeline/metrics-elasticsearch.ingest_pipeline@custom
+
+# Remove enrichment policy
+DELETE /_enrich/policy/fin_dashboard_deployment_lookup
+
+# Remove watcher (if configured)
+DELETE _watcher/watch/execute_fin_dashboard_deployment_lookup_enrich_policy
+
+# Remove enrich user and role (if configured)
+DELETE /_security/user/enrich-watcher-user
+DELETE /_security/role/enrichment_policy_role
+```
+
+After cleanup, follow the v3 setup steps above.
+
 ---
 
 ## Legacy Setup (v1/v2 - using custom pipelines)
