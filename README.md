@@ -6,24 +6,46 @@ The instructions below describe how to set up a dashboard that provides a financ
 3. Deployment usage summary
 4. Chargeback summary
 
+**Known Issue:** Usage data filtering by deployment group is not yet functional
+
+## Dashboard Versions
+
+- **v3** (recommended): Uses `ess.billing.deployment_tags` with `chargeback_group` key. No custom pipelines required. 
+- **v2/v1**: Legacy versions using deployment name parsing (requires custom pipelines)
+
 ## Dependencies
 
 1. [Elasticsearch Service Billing integration](https://www.elastic.co/docs/reference/integrations/ess_billing) with `ess.billing.deployment_tags` field support
 2. [Elasticsearch integration](https://www.elastic.co/docs/reference/integrations/elasticsearch) usage transform
 3. [Elasticsearch Chargeback integration](https://github.com/elastic/elasticsearch-chargeback/tree/main/integration)
-4. Deployments should have a tag with key `chargeback_group` to specify the deployment group
+4. Deployments must have a tag with key `chargeback_group` to specify the deployment group
 
-## Steps to implement the dashboard
+## Steps to implement the dashboard (v3)
 
-1. Set up an enrichment policy to map deployment IDs to deployment names for usage data.
-2. Build a custom ingest pipeline to extract the business unit from the deployment name and set it as `deployment_group`.
-3. Build a custom ingest pipeline for usage data, using the enrichment policy to add deployment names and extract the business unit as `deployment_group`.
-4. Update historical billing and usage data by increasing the lookback value or running an update-by-query operation to apply the new pipelines.
-5. Upgrade the Chargeback integration to ensure compatibility with the new pipelines.
-6. Set up a watcher to execute the enrichment policy daily and keep the enrich index up to date.
-7. Import the [dashboard NDJSON](https://github.com/JohannesMahne/fin_overview_dashboard/blob/main/fin-overview-dashboard.ndjson) to use the `deployment_group` field to filter by business
+1. Ensure your deployments are tagged with `chargeback_group` key in ECH
+2. Verify the ESS Billing integration is collecting `ess.billing.deployment_tags` field
+3. Import the [v3 dashboard NDJSON](https://github.com/JohannesMahne/fin_overview_dashboard/blob/main/fin-overview-dashboard-v3.ndjson)
+4. The dashboard will automatically use the `chargeback_group` tag values to filter billing and chargeback data
 
-## Details
+---
+
+## Legacy Setup (v1/v2 - using custom pipelines)
+
+The following instructions are for the legacy dashboard versions that require custom ingest pipelines to extract deployment group from deployment names.
+
+### Steps to implement legacy dashboard
+
+1. Set up an enrichment policy to map deployment IDs to deployment names for usage data
+2. Build a custom ingest pipeline to extract the business unit from the deployment name and set it as `deployment_group`
+3. Build a custom ingest pipeline for usage data, using the enrichment policy to add deployment names and extract the business unit as `deployment_group`
+4. Update historical billing and usage data by increasing the lookback value or running an update-by-query operation to apply the new pipelines
+5. Upgrade the Chargeback integration to ensure compatibility with the new pipelines
+6. Set up a watcher to execute the enrichment policy daily and keep the enrich index up to date
+7. Import the legacy [dashboard NDJSON](https://github.com/JohannesMahne/fin_overview_dashboard/blob/main/fin-overview-dashboard.ndjson)
+
+---
+
+## Legacy Pipeline Details
 
 ### Create enrichment policy
 
