@@ -248,3 +248,4 @@ Upload the [dashboard NDJSON](https://github.com/JohannesMahne/fin_overview_dash
 - v2: Simplified pipelines, uses tags only
 - v3: ES|QL controls with `?deployment_group` parameter, tag-based filtering
 - v4: Updated to `conf_chargeable_unit_rate` field, null-check on all billing queries for empty control state
+- v5: Add LOOKUP JOIN to monitoring-indices queries (Daily ingest, Ingest breakdown, Daily querying, Query breakdown) to filter by deployment_group
