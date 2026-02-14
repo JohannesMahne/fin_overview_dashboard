@@ -241,3 +241,10 @@ PUT _watcher/watch/execute_fin_dashboard_deployment_lookup_enrich_policy
 ### Upload dashboard
 
 Upload the [dashboard NDJSON](https://github.com/JohannesMahne/fin_overview_dashboard/blob/main/fin-overview-dashboard.ndjson) file.
+
+### Changelog
+
+- v1: Initial release with deployment name parsing
+- v2: Simplified pipelines, uses tags only
+- v3: ES|QL controls with `?deployment_group` parameter, tag-based filtering
+- v4: Updated to `conf_chargeable_unit_rate` field, null-check on all billing queries for empty control state
